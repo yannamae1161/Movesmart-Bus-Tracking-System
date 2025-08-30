@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bus Tracking • Login</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+    }
+    .login-box {
+      background: #fff;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      width: 350px;
+    }
+    .login-box h2 {
+      margin: 0 0 20px;
+      font-size: 24px;
+      text-align: center;
+      color: #0f172a;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin: 15px 0 5px;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 12px;
+      background: #0f172a;
+      color: #fff;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #1e293b;
+    }
+    .message {
+      margin-top: 15px;
+      text-align: center;
+      font-size: 14px;
+    }
+    .error { color: #b91c1c; }
+    .success { color: #15803d; }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <h2>Bus Tracking Login</h2>
+    <form id="loginForm">
+      <label>Email</label>
+      <input type="email" id="email" placeholder="you@example.com" required>
+
+      <label>Password</label>
+      <input type="password" id="password" placeholder="••••••••" required>
+
+      <button type="submit">Log In</button>
+      <div class="message" id="msg"></div>
+    </form>
+  </div>
+
+  <script>
+    const API = "http://localhost:4000/api/auth/login"; // adjust if backend URL differs
+    const form = document.getElementById('loginForm');
+    const msg = document.getElementById('msg');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.textContent = "Logging in...";
+      msg.className = "message";
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      try {
+        const res = await fetch(API, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          msg.textContent = data.message || "Invalid login";
+          msg.className = "message error";
+          return;
+        }
+
+        // Save token + user in localStorage
+        localStorage.setItem("bt_token", data.token);
+        localStorage.setItem("bt_user", JSON.stringify(data.user));
+
+        msg.textContent = "Login successful! Redirecting...";
+        msg.className = "message success";
+
+        // Example redirect by role
+        setTimeout(() => {
+          if (data.user.role === "admin") window.location.href = "admin.html";
+          else if (data.user.role === "driver") window.location.href = "driver.html";
+          else if (data.user.role === "conductor") window.location.href = "conductor.html";
+          else window.location.href = "passenger.html";
+        }, 1000);
+      } catch (err) {
+        msg.textContent = "Network error. Try again.";
+        msg.className = "message error";
+      }
+    });
+  </script>
+</body>
+</html>
